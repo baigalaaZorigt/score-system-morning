@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Зээлийн Оноо Тооцоолох</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.1);
+      width: 100%;
+      max-width: 500px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #1a56db, #0e9f6e);
+      padding: 2rem;
+      color: #fff;
+      text-align: center;
+    }
+
+    .card-header h1 { font-size: 1.5rem; font-weight: 700; }
+    .card-header p  { font-size: .875rem; opacity: .85; margin-top: .4rem; }
+
+    .card-body { padding: 2rem; }
+
+    .form-group { margin-bottom: 1.25rem; }
+
+    label {
+      display: block;
+      font-size: .875rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: .4rem;
+    }
+
+    input, select {
+      width: 100%;
+      padding: .65rem 1rem;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 1rem;
+      color: #111827;
+      transition: border-color .2s;
+      background: #f9fafb;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #1a56db;
+      background: #fff;
+    }
+
+    .btn {
+      width: 100%;
+      padding: .75rem;
+      background: linear-gradient(135deg, #1a56db, #0e9f6e);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .2s;
+      margin-top: .5rem;
+    }
+
+    .btn:hover { opacity: .88; }
+
+    /* ---- Result box ---- */
+    .result {
+      margin-top: 1.75rem;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      border: 2px solid transparent;
+    }
+
+    .result.approved  { background: #f0fdf4; border-color: #16a34a; }
+    .result.review    { background: #fffbeb; border-color: #d97706; }
+    .result.rejected  { background: #fef2f2; border-color: #dc2626; }
+
+    .score-label { font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; }
+
+    .score-value {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin: .25rem 0;
+    }
+
+    .approved  .score-value { color: #16a34a; }
+    .review    .score-value { color: #d97706; }
+    .rejected  .score-value { color: #dc2626; }
+
+    .decision-badge {
+      display: inline-block;
+      padding: .35rem 1.1rem;
+      border-radius: 999px;
+      font-size: .95rem;
+      font-weight: 700;
+      margin-top: .5rem;
+    }
+
+    .approved  .decision-badge { background: #dcfce7; color: #166534; }
+    .review    .decision-badge { background: #fef9c3; color: #92400e; }
+    .rejected  .decision-badge { background: #fee2e2; color: #991b1b; }
+
+    /* score bar */
+    .bar-wrap {
+      background: #e5e7eb;
+      border-radius: 999px;
+      height: 10px;
+      margin-top: 1rem;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width .6s ease;
+    }
+
+    .approved  .bar-fill { background: #16a34a; }
+    .review    .bar-fill { background: #d97706; }
+    .rejected  .bar-fill { background: #dc2626; }
+
+    .bar-hints {
+      display: flex;
+      justify-content: space-between;
+      font-size: .7rem;
+      color: #9ca3af;
+      margin-top: .3rem;
+    }
+
+    /* error */
+    .alert-error {
+      background: #fef2f2;
+      border: 1.5px solid #fca5a5;
+      border-radius: 8px;
+      padding: .85rem 1rem;
+      color: #b91c1c;
+      font-size: .9rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <h1>&#127970; Зээлийн Оноо Тооцоолох</h1>
+      <p>Зээлийн хүсэлтийн мэдээллийг оруулж оноогоо шалгаарай</p>
+    </div>
+
+    <div class="card-body">
+      <form method="POST" action="/predict" novalidate>
+
+        <div class="form-group">
+          <label for="monthly_salary">Сарын цалин (₮)</label>
+          <input
+            type="number"
+            id="monthly_salary"
+            name="monthly_salary"
+            placeholder="Жишээ: 1500000"
+            min="0"
+            step="1000"
+            value="{{ monthly_salary if monthly_salary is defined else '' }}"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="employment_status">Ажил эрхлэлт</label>
+          <select id="employment_status" name="employment_status" required>
+            <option value="" disabled {% if employment_status is not defined %}selected{% endif %}>-- Сонгоно уу --</option>
+            <option value="1" {% if employment_status is defined and employment_status|int == 1 %}selected{% endif %}>Бүтэн цагийн ажилтан</option>
+            <option value="2" {% if employment_status is defined and employment_status|int == 2 %}selected{% endif %}>Хагас цагийн ажилтан</option>
+            <option value="3" {% if employment_status is defined and employment_status|int == 3 %}selected{% endif %}>Өөрийн бизнес / Хувиараа хөдөлмөр эрхлэгч</option>
+            <option value="0" {% if employment_status is defined and employment_status|int == 0 %}selected{% endif %}>Ажилгүй</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="years_worked">Ажилласан жил</label>
+          <input
+            type="number"
+            id="years_worked"
+            name="years_worked"
+            placeholder="Жишээ: 3"
+            min="0"
+            step="0.5"
+            value="{{ years_worked if years_worked is defined else '' }}"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="loan_amount">Хүссэн зээлийн дүн (₮)</label>
+          <input
+            type="number"
+            id="loan_amount"
+            name="loan_amount"
+            placeholder="Жишээ: 5000000"
+            min="1"
+            step="10000"
+            value="{{ loan_amount if loan_amount is defined else '' }}"
+            required
+          />
+        </div>
+
+        <button type="submit" class="btn">Оноо тооцоолох &rarr;</button>
+      </form>
+
+      {% if error %}
+      <div class="alert-error">&#9888; {{ error }}</div>
+      {% endif %}
+
+      {% if score is defined %}
+      <div class="result {{ status }}">
+        <div class="score-label">Таны зээлийн оноо</div>
+        <div class="score-value">{{ score }}</div>
+        <span class="decision-badge">{{ decision }}</span>
+
+        <div class="bar-wrap">
+          <div class="bar-fill" style="width: {{ (score / 1000 * 100) | round(1) }}%"></div>
+        </div>
+        <div class="bar-hints">
+          <span>0</span>
+          <span>450 — Татгалзах хил</span>
+          <span>700 — Зөвшөөрөх хил</span>
+          <span>1000</span>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
